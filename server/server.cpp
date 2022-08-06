@@ -2,6 +2,7 @@
 
 #include <QDataStream>
 #include <QIODevice>
+#include <QTime>
 #include <QDebug>
 
 Server::Server()
@@ -50,10 +51,11 @@ void Server::slot_ready_read()
                 break;
 
             QString str;
-            in_stream >> str;
-            qDebug() << str;
-
+            QTime time;
+            in_stream >> time >> str;
+            qDebug() << time << str;
             sent_data_to_client(str);
+
             _next_block_size = 0;
             break;
         }
@@ -68,7 +70,9 @@ void Server::sent_data_to_client(const QString& str)
 
     QDataStream out_stream(&_data, QIODevice::WriteOnly);
     out_stream.setVersion(QDataStream::Qt_5_15);
-    out_stream << str;
+    out_stream << quint16(0) << QTime::currentTime() << str;
+    out_stream.device()->seek(0);
+    out_stream << quint16(_data.size() - sizeof(quint16));
     for (int i = 0; i < _sockets.size(); i++)
         _sockets[i]->write(_data);
 }

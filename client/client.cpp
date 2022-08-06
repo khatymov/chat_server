@@ -2,6 +2,7 @@
 #include "ui_client.h"
 
 #include <QDataStream>
+#include <QTime>
 
 Client::Client(QWidget *parent)
     : QMainWindow(parent)
@@ -28,10 +29,28 @@ void Client::slot_ready_read()
     in_stream.setVersion(QDataStream::Qt_5_15);
     if (in_stream.status() == QDataStream::Ok)
     {
-        QString str;
-        in_stream >> str;
+        for (;;)
+        {
+            if (_next_block_size == 0)
+            {
+                if (_socket->bytesAvailable() < 2)
+                    break;
 
-        ui->textBrowser->append(str);
+                in_stream >> _next_block_size;
+            }
+
+            if (_socket->bytesAvailable() < _next_block_size)
+                break;
+
+            QString str;
+            QTime time;
+            in_stream >> time >> str;
+            qDebug() << time << str;
+            ui->textBrowser->append(time.toString() + ": "+ str);
+
+            _next_block_size = 0;
+            break;
+        }
     } else
         ui->textBrowser->append("error");
 }
@@ -46,10 +65,11 @@ void Client::sent_2_server(const QString &str)
     _data.clear();
     QDataStream out_stream(&_data, QIODevice::WriteOnly);
     out_stream.setVersion(QDataStream::Qt_5_15);
-//    out_stream << str;
-    out_stream << qint16(0) << str;
+
+//    out_stream << quint16(0) <<  str;
+    out_stream << quint16(0) << QTime::currentTime() << str;
     out_stream.device()->seek(0);
-    out_stream << qint16(_data.size() - sizeof(qint16));
+    out_stream << quint16(_data.size() - sizeof(quint16));
 
     _socket->write(_data);
     ui->lineEdit->clear();
