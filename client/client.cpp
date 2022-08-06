@@ -43,8 +43,10 @@ void Client::on_pushButton_clicked()
 
 void Client::sent_2_server(const QString &str)
 {
+    _data.clear();
     QDataStream out_stream(&_data, QIODevice::WriteOnly);
     out_stream.setVersion(QDataStream::Qt_5_15);
+//    out_stream << str;
     out_stream << qint16(0) << str;
     out_stream.device()->seek(0);
     out_stream << qint16(_data.size() - sizeof(qint16));

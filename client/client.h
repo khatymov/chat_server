@@ -35,6 +35,6 @@ private:
 
     QByteArray _data;
 
-    qint16 _next_block_size;
+    quint16 _next_block_size;
 };
 #endif // CLIENT_H

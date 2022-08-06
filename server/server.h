@@ -16,7 +16,7 @@ public:
     void sent_data_to_client(const QString& data);
 
 private:
-    qint16 _next_block_size;
+    quint16 _next_block_size;
 
     QByteArray _data;
 
